@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#6a2030">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Figure Drawing">
+<title>Figure Drawing Studio</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon192.png">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #ffffff;
+    --panel: #f5f2ee;
+    --burgundy: #6a2030;
+    --gold: #7a6030;
+    --text: #1a1010;
+    --subtext: #706050;
+    --rules: #e0d8d0;
+    --hdr-bg: #f0ebe4;
+    --card: #f8f5f0;
+    --radius: 10px;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding-bottom: 2rem;
+  }
+  header {
+    background: var(--hdr-bg);
+    border-bottom: 1px solid var(--rules);
+    padding: 1.25rem 1rem 1rem;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .app-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--burgundy);
+    letter-spacing: 0.06em;
+    font-family: Georgia, serif;
+  }
+  .app-sub {
+    font-size: 12px;
+    color: var(--subtext);
+    letter-spacing: 0.05em;
+    margin-top: 2px;
+  }
+  .gold-rule { width: 40px; height: 1px; background: var(--gold); margin: 6px auto 0; }
+  main { max-width: 480px; margin: 0 auto; padding: 1rem; }
+
+  /* Stats row */
+  .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 1rem; }
+  .stat-card { background: var(--panel); border-radius: var(--radius); padding: 0.75rem 0.5rem; text-align: center; border: 1px solid var(--rules); }
+  .stat-val { font-size: 26px; font-weight: 600; color: var(--burgundy); line-height: 1; }
+  .stat-lbl { font-size: 11px; color: var(--subtext); margin-top: 3px; text-transform: uppercase; letter-spacing: 0.04em; }
+
+  /* Section cards */
+  .card { background: var(--card); border: 1px solid var(--rules); border-radius: var(--radius); padding: 1rem; margin-bottom: 1rem; }
+  .card-title { font-size: 12px; font-weight: 600; color: var(--subtext); letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 0.75rem; }
+
+  /* Pose duration grid */
+  .pose-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 1rem; }
+  .pose-btn { padding: 9px 4px; border: 1px solid var(--rules); border-radius: 8px; background: var(--bg); color: var(--subtext); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+  .pose-btn.active { background: var(--burgundy); border-color: var(--burgundy); color: #fff; }
+  .pose-btn:hover:not(.active) { border-color: var(--gold); color: var(--gold); }
+
+  /* Timer */
+  .timer-display { text-align: center; padding: 1.25rem 0 0.75rem; }
+  .timer-ring { font-size: 56px; font-weight: 300; color: var(--burgundy); font-family: Georgia, serif; line-height: 1; letter-spacing: -2px; }
+  .timer-status { font-size: 12px; color: var(--subtext); margin-top: 6px; letter-spacing: 0.04em; }
+
+  /* Controls */
+  .controls { display: flex; gap: 10px; margin-top: 0.75rem; }
+  .btn-primary { flex: 2; padding: 13px; background: var(--burgundy); color: #fff; border: none; border-radius: var(--radius); font-size: 15px; font-weight: 500; cursor: pointer; transition: background 0.15s; }
+  .btn-primary:hover { background: #5a1828; }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-secondary { flex: 1; padding: 13px; background: var(--bg); color: var(--text); border: 1px solid var(--rules); border-radius: var(--radius); font-size: 15px; cursor: pointer; }
+  .btn-secondary:hover { border-color: var(--subtext); }
+
+  /* Notes */
+  .notes-input { width: 100%; padding: 9px 11px; border: 1px solid var(--rules); border-radius: 8px; background: var(--bg); color: var(--text); font-size: 13px; font-family: inherit; resize: none; margin-top: 0.75rem; }
+  .notes-input:focus { outline: 2px solid var(--gold); outline-offset: 1px; border-color: var(--gold); }
+
+  /* Log button */
+  .log-btn { width: 100%; padding: 12px; background: var(--gold); color: #fff; border: none; border-radius: var(--radius); font-size: 14px; font-weight: 500; cursor: pointer; margin-top: 0.75rem; }
+  .log-btn:hover { background: #6a5028; }
+
+  /* Launch button */
+  .launch-btn { width: 100%; padding: 14px; background: var(--panel); color: var(--gold); border: 2px solid var(--gold); border-radius: var(--radius); font-size: 15px; font-weight: 600; cursor: pointer; margin-bottom: 1rem; letter-spacing: 0.03em; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .launch-btn:hover { background: var(--gold); color: #fff; }
+
+  /* Progress */
+  .progress-bar { height: 8px; background: var(--rules); border-radius: 4px; margin: 0.5rem 0; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--gold); border-radius: 4px; transition: width 0.5s ease; }
+  .progress-meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--subtext); }
+  .milestones { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+  .milestone { font-size: 11px; padding: 3px 9px; border-radius: 12px; background: var(--panel); color: var(--subtext); border: 1px solid var(--rules); }
+  .milestone.done { background: var(--burgundy); color: #fff; border-color: var(--burgundy); }
+
+  /* Log entries */
+  .log-entry { display: flex; justify-content: space-between; align-items: flex-start; padding: 9px 0; border-bottom: 1px solid var(--rules); }
+  .log-entry:last-child { border-bottom: none; }
+  .log-date { font-size: 12px; color: var(--subtext); }
+  .log-note { font-size: 12px; color: var(--subtext); max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .log-poses { font-size: 14px; font-weight: 600; color: var(--burgundy); white-space: nowrap; }
+  .empty-log { font-size: 13px; color: var(--subtext); text-align: center; padding: 1rem 0; font-style: italic; }
+
+  /* Toast */
+  .toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%); background: #2a5a3a; color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 13px; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 100; white-space: nowrap; }
+  .toast.show { opacity: 1; }
+
+  /* Session complete flash */
+  .flash { background: #f0f7f0; border: 1px solid #4a7a5a; color: #2a5a3a; border-radius: 8px; padding: 8px 12px; font-size: 13px; text-align: center; margin-top: 0.75rem; display: none; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="app-title">Figure Drawing Studio</div>
+  <div class="gold-rule"></div>
+  <div class="app-sub">Session tracker · Jon Centeno · reMarkable practice log</div>
+</header>
+
+<main>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-val" id="total-sessions">0</div>
+      <div class="stat-lbl">Sessions</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="total-poses">0</div>
+      <div class="stat-lbl">Poses</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="total-mins">0</div>
+      <div class="stat-lbl">Minutes</div>
+    </div>
+  </div>
+
+  <!-- Progress -->
+  <div class="card">
+    <div class="card-title">Progress · 40-session notebook</div>
+    <div class="progress-meta">
+      <span id="progress-text">0 of 40 sessions</span>
+      <span id="progress-pct">0%</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    <div class="milestones" id="milestones-row"></div>
+  </div>
+
+  <!-- Timer -->
+  <div class="card">
+    <div class="card-title">Pose duration</div>
+    <div class="pose-grid">
+      <button class="pose-btn" data-secs="30">30s</button>
+      <button class="pose-btn active" data-secs="60">1 min</button>
+      <button class="pose-btn" data-secs="120">2 min</button>
+      <button class="pose-btn" data-secs="300">5 min</button>
+      <button class="pose-btn" data-secs="600">10 min</button>
+    </div>
+    <div class="timer-display">
+      <div class="timer-ring" id="timer-display">1:00</div>
+      <div class="timer-status" id="timer-status">Ready — select duration and start</div>
+    </div>
+    <div class="controls">
+      <button class="btn-secondary" onclick="resetTimer()">Reset</button>
+      <button class="btn-primary" id="start-btn" onclick="toggleTimer()">Start pose</button>
+    </div>
+    <textarea class="notes-input" id="session-notes" rows="2" placeholder="Session notes — focus, technique, corrections from Susan..."></textarea>
+    <div class="flash" id="session-flash">Session logged!</div>
+    <button class="log-btn" onclick="logSession()">Log this session</button>
+  </div>
+
+  <!-- Launch Line of Action -->
+  <button class="launch-btn" onclick="window.open('https://line-of-action.com/practice-tools/figure-drawings','_blank')">
+    ↗ Open Line of Action — figure reference
+  </button>
+
+  <!-- Session History -->
+  <div class="card">
+    <div class="card-title">Session history</div>
+    <div id="log-entries"><div class="empty-log">No sessions yet — draw your first pose above.</div></div>
+  </div>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = 'figuredrawing_v1';
+let timerInterval = null;
+let selectedSecs = 60;
+let remaining = 60;
+let running = false;
+let posesThisSession = 0;
+let sessionStartTime = null;
+
+function loadData() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || { sessions: [] }; }
+  catch { return { sessions: [] }; }
+}
+function saveData(d) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); } catch(e) {} }
+
+function fmt(s) {
+  const m = Math.floor(s / 60), sec = s % 60;
+  return m + ':' + String(sec).padStart(2, '0');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+document.querySelectorAll('.pose-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    if (running) return;
+    document.querySelectorAll('.pose-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    selectedSecs = parseInt(this.dataset.secs);
+    remaining = selectedSecs;
+    document.getElementById('timer-display').textContent = fmt(remaining);
+    document.getElementById('timer-status').textContent = 'Ready — ' + this.textContent + ' per pose';
+  });
+});
+
+function toggleTimer() {
+  if (!running) {
+    running = true;
+    if (!sessionStartTime) sessionStartTime = Date.now();
+    document.getElementById('start-btn').textContent = 'Pose done';
+    timerInterval = setInterval(() => {
+      remaining--;
+      document.getElementById('timer-display').textContent = fmt(remaining);
+      document.getElementById('timer-status').textContent = 'Drawing... pose ' + (posesThisSession + 1);
+      if (remaining <= 0) poseComplete();
+    }, 1000);
+  } else {
+    poseComplete();
+  }
+}
+
+function poseComplete() {
+  clearInterval(timerInterval);
+  running = false;
+  posesThisSession++;
+  remaining = selectedSecs;
+  document.getElementById('timer-display').textContent = fmt(remaining);
+  document.getElementById('start-btn').textContent = 'Start pose';
+  document.getElementById('timer-status').textContent = posesThisSession + ' pose' + (posesThisSession !== 1 ? 's' : '') + ' this session — keep going!';
+  showToast('Pose ' + posesThisSession + ' done!');
+}
+
+function resetTimer() {
+  clearInterval(timerInterval);
+  running = false;
+  remaining = selectedSecs;
+  document.getElementById('timer-display').textContent = fmt(remaining);
+  document.getElementById('start-btn').textContent = 'Start pose';
+  document.getElementById('timer-status').textContent = 'Reset — ready when you are';
+}
+
+function logSession() {
+  if (posesThisSession === 0) { showToast('Draw at least one pose first!'); return; }
+  const data = loadData();
+  const mins = sessionStartTime ? Math.max(1, Math.round((Date.now() - sessionStartTime) / 60000)) : Math.round(posesThisSession * selectedSecs / 60);
+  const notes = document.getElementById('session-notes').value.trim();
+  data.sessions.push({
+    date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+    poses: posesThisSession,
+    duration: selectedSecs,
+    mins: mins,
+    notes: notes
+  });
+  saveData(data);
+  posesThisSession = 0;
+  sessionStartTime = null;
+  document.getElementById('session-notes').value = '';
+  const flash = document.getElementById('session-flash');
+  flash.style.display = 'block';
+  setTimeout(() => { flash.style.display = 'none'; }, 3000);
+  renderAll();
+}
+
+function renderAll() {
+  const data = loadData();
+  const sessions = data.sessions;
+  const totalS = sessions.length;
+  const totalP = sessions.reduce((a, s) => a + s.poses, 0);
+  const totalM = sessions.reduce((a, s) => a + (s.mins || 0), 0);
+  document.getElementById('total-sessions').textContent = totalS;
+  document.getElementById('total-poses').textContent = totalP;
+  document.getElementById('total-mins').textContent = totalM;
+  const pct = Math.min(100, Math.round((totalS / 40) * 100));
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-text').textContent = totalS + ' of 40 sessions';
+  document.getElementById('progress-pct').textContent = pct + '%';
+  const mRow = document.getElementById('milestones-row');
+  mRow.innerHTML = [10, 20, 30, 40].map(m =>
+    '<span class="milestone ' + (totalS >= m ? 'done' : '') + '">' + (totalS >= m ? '✓ ' : '') + m + '</span>'
+  ).join('');
+  const container = document.getElementById('log-entries');
+  if (sessions.length === 0) {
+    container.innerHTML = '<div class="empty-log">No sessions yet — draw your first pose above.</div>';
+    return;
+  }
+  container.innerHTML = [...sessions].reverse().slice(0, 10).map(s =>
+    '<div class="log-entry">' +
+    '<div><div class="log-date">' + s.date + '</div>' +
+    (s.notes ? '<div class="log-note">' + s.notes.substring(0, 50) + (s.notes.length > 50 ? '…' : '') + '</div>' : '') +
+    '</div>' +
+    '<div class="log-poses">' + s.poses + ' poses</div>' +
+    '</div>'
+  ).join('');
+}
+
+renderAll();
+</script>
+</body>
+</html>
